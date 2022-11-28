@@ -10,6 +10,8 @@ public class SchoolHELPConsole {
     public static void main(String[] args) {
         sc = new Scanner(System.in);
         schoolHelp = new SchoolHelp();
+
+        // untuk generate data school, school admin, volunteer , offer, request secara otomatis
         beforeRun();
 
         int choice;
@@ -21,8 +23,10 @@ public class SchoolHELPConsole {
             System.out.println("4. View Requests");
             System.out.println("5. Submit Offer");
             System.out.println("6. Review Offers");
+            System.out.println("7. Display All Users");
+            System.out.println("8. Display All Request");
             System.out.println("0. Quit");
-            System.out.println("");
+            System.out.println();
             System.out.print("Your choice : ");
 
             choice = sc.nextInt();
@@ -31,7 +35,7 @@ public class SchoolHELPConsole {
             switch (choice) {
                 case 1:
                     registerSchool();
-                    break; //Line 5a. skipped
+                    break;
                 case 2:
                     submitRequest();
                     break;
@@ -46,6 +50,12 @@ public class SchoolHELPConsole {
                     break;
                 case 6:
                     reviewOffer();
+                    break;
+                case 7:
+                    displayAllUser();
+                    break;
+                case 8:
+                    displayAllRequest();
                     break;
                 case 0:
                     System.out.println("Thank You");
@@ -291,7 +301,59 @@ public class SchoolHELPConsole {
         String password = sc.nextLine();
         System.out.println();
 
-        return schoolHelp.loginAsSchoolAdmin(username, password);
+        User user = schoolHelp.login(username, password);
+
+        if (user == null) {
+            System.out.println("School Admin account not found");
+            return null;
+        }
+
+        if (!(user instanceof SchoolAdmin)) {
+            System.out.println("User is not School Admin");
+            return null;
+        }
+
+
+        int choice;
+        do {
+            System.out.println("Welcome " + user.getFullName() + " as a " + ((SchoolAdmin) user).getPosition());
+            System.out.println("1. Change Password");
+            System.out.println("2. Update Profile");
+            System.out.println("3. Continue");
+            System.out.print("Your choice : ");
+            choice = sc.nextInt();
+            sc.nextLine();
+            System.out.println();
+
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter a new password : ");
+                    String newPassword = sc.nextLine();
+                    schoolHelp.changePassword(user, newPassword);
+                    System.out.println("Password has been changed");
+                    System.out.println();
+                    break;
+
+                case 2:
+                    System.out.print("Enter fullname : ");
+                    String fullname = sc.nextLine();
+                    System.out.print("Enter email : ");
+                    String email = sc.nextLine();
+                    System.out.print("Enter phone : ");
+                    String phone = sc.nextLine();
+                    System.out.print("Enter staff ID : ");
+                    String staffId = sc.nextLine();
+                    System.out.print("Enter position : ");
+                    String position = sc.nextLine();
+                    schoolHelp.updateProfile((SchoolAdmin) user, fullname, email, phone, staffId, position);
+                    System.out.println("Profile has been updated");
+                    System.out.println();
+                    break;
+            }
+
+        } while (choice != 3);
+
+        return schoolHelp.getSchoolFromSchoolAdmin((SchoolAdmin) user);
     }
 
     private static Volunteer loginAsVolunteer() {
@@ -402,6 +464,8 @@ public class SchoolHELPConsole {
         } else {
             createSchoolAdmin(existSchool.getSchoolID());
         }
+
+        loginAsSchoolAdmin();
     }
 
     private static void createSchoolAdmin(String schoolId) {
@@ -420,6 +484,7 @@ public class SchoolHELPConsole {
         String schoolAdminStaffId = sc.nextLine();
         System.out.print("Enter position : ");
         String schoolAdminPosition = sc.nextLine();
+        System.out.println();
 
         schoolHelp.createSchoolAdmin(schoolAdminUsername, schoolAdminPassword, schoolAdminFullname, schoolAdminEmail,
                 schoolAdminPhone, schoolAdminStaffId, schoolAdminPosition, schoolId);
@@ -429,26 +494,104 @@ public class SchoolHELPConsole {
     private static void beforeRun() {
         School newSchool = schoolHelp.createNewSchool("Tadika", "Jimbaran", "Badung");
 
-        schoolHelp.createSchoolAdmin("scadmin", "scadmin", "School Admin", "admin@schooladmin.com",
-                "08379917266532", "1212121212", "pegawai", newSchool.getSchoolID());
+        schoolHelp.createSchoolAdmin("scadmin", "scadmin", "Admin Tadika", "admin@tadikaadmin.com",
+                "08227212333", "111222333", "Owner", newSchool.getSchoolID());
 
-        TutorialRequest tr = schoolHelp.submitNewTutorialRequest("NEW", "tutorial description", newSchool.getSchoolID(),
+        School newSchool2 = schoolHelp.createNewSchool("Mesra", "Imam Bonjol", "Denpasar");
+
+        schoolHelp.createSchoolAdmin("scadmin2", "scadmin2", "Admin Mesra", "admin@mesraadmin.com",
+                "08117278392", "666777888", "", newSchool2.getSchoolID());
+
+        TutorialRequest tr = schoolHelp.submitNewTutorialRequest("NEW", "Tutorial Request Needed", newSchool.getSchoolID(),
                 "2022-11-28", "10:30", "5", 10);
+        tr.setRequestDate("2022-11-30");
 
-        ResourceRequest rr1 = schoolHelp.submitNewResourceRequest("NEW", "resource description 1", newSchool.getSchoolID(),
+        ResourceRequest rr1 = schoolHelp.submitNewResourceRequest("NEW", "Mobil Device Needed", newSchool.getSchoolID(),
                 "mobile device", 10);
 
-        ResourceRequest rr2 = schoolHelp.submitNewResourceRequest("NEW", "resource description 2", newSchool.getSchoolID(),
+        ResourceRequest rr2 = schoolHelp.submitNewResourceRequest("NEW", "Personal Computer needed", newSchool.getSchoolID(),
                 "personal computer", 5);
+        rr2.setRequestDate("2022-11-29");
+
+
+        ResourceRequest rr3 = schoolHelp.submitNewResourceRequest("NEW", "Need for Computer", newSchool2.getSchoolID(),
+                "personal computer", 5);
+        rr3.setRequestDate("2022-12-1");
 
         Volunteer vol = schoolHelp.createNewVolunteer("vol", "vol", "Volunteer",
                 "vol@email.com", "087653773", "1997-11-12", "12");
 
         Volunteer vol2 = schoolHelp.createNewVolunteer("vol1", "vol1", "Volunteer 1",
-                "vol@email.com", "087653773", "1995-12-12", "10");
+                "vol2@email.com", "087653773", "1995-12-12", "10");
 
-        schoolHelp.submitOffer("Sudah saya tandai", rr1.getRequestID(), vol.getUserId());
-        schoolHelp.submitOffer("Sudah saya tandai ya asu", rr1.getRequestID(), vol2.getUserId());
+        schoolHelp.submitOffer("Remaked by "+vol.getFullName(), rr1.getRequestID(), vol.getUserId());
+        schoolHelp.submitOffer("Remaked by "+vol2.getFullName(), rr1.getRequestID(), vol2.getUserId());
+
+    }
+
+    public static void displayAllUser() {
+        List<User> userList = schoolHelp.getAllUser();
+
+        if (userList.size() < 1) {
+            System.out.println("There is no users");
+            return;
+        }
+
+        System.out.println(padRight("USER ID", 40)
+                + padRight("FULLNAME", 25)
+                + padRight("USER TYPE", 20)
+                + padRight("EMAIL", 30)
+                + padRight("PHONE NUMBER", 18));
+
+        userList.forEach(user -> {
+            String userType;
+
+            if (user instanceof SchoolAdmin) {
+                userType = "School Admin";
+            } else {
+                userType = "Volunteer";
+            }
+
+            System.out.println(padRight(user.getUserId(), 40)
+                    + padRight(user.getFullName(), 25)
+                    + padRight(userType, 20)
+                    + padRight(user.getEmail(), 30)
+                    + padRight(user.getPhoneNumber(), 18));
+        });
+    }
+
+    public static void displayAllRequest() {
+        List<Request> listRequest = schoolHelp.getAllRequest();
+
+        if (listRequest.size() < 1) {
+            System.out.println("There is no requests");
+            return;
+        }
+
+        System.out.println(padRight("REQUEST ID", 40)
+                + padRight("REQUEST DATE", 15)
+                + padRight("STATUS", 22)
+                + padRight("SCHOOL NAME", 25)
+                + padRight("TYPE", 20)
+                + padRight("DESCRIPTION", 30));
+
+        listRequest.forEach(request -> {
+            String type;
+            School school = schoolHelp.getSchoolById(request.getSchoolID());
+
+            if (request instanceof TutorialRequest) {
+                type = "Tutorial Request";
+            } else {
+                type = "Resource Request";
+            }
+
+            System.out.println(padRight(request.getRequestID(), 40)
+                    + padRight(request.getRequestDate(), 15)
+                    + padRight(request.getRequestStatus(), 22)
+                    + padRight(school.getSchoolName(), 25)
+                    + padRight(type, 20)
+                    + padRight(request.getDescription(), 30));
+        });
 
     }
 }

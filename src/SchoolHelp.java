@@ -3,8 +3,7 @@ import model.*;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.Period;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class SchoolHelp implements Serializable {
@@ -20,7 +19,7 @@ public class SchoolHelp implements Serializable {
         return schoolHELPAdmin.getUserName().equals(username) && schoolHELPAdmin.getPassword().equals(password);
     }
 
-    public School loginAsSchoolAdmin(String username, String password) {
+    public SchoolAdmin loginAsSchoolAdmin(String username, String password) {
         User userAdmin = userList.stream()
                 .filter(user -> user.getUserName().equals(username))
                 .filter(user -> user.getPassword().equals(password))
@@ -31,8 +30,10 @@ public class SchoolHelp implements Serializable {
             return null;
         }
 
-        SchoolAdmin admin = (SchoolAdmin) userAdmin;
+        return (SchoolAdmin) userAdmin;
+    }
 
+    public School getSchoolFromSchoolAdmin(SchoolAdmin admin) {
         return schoolList.stream()
                 .filter(school -> school.getSchoolID().equals(admin.getSchoolID()))
                 .findFirst().orElse(null);
@@ -45,6 +46,7 @@ public class SchoolHelp implements Serializable {
                 .filter(school -> school.getCity().equals(city))
                 .findFirst().orElse(null);
     }
+
     public School createNewSchool(String schoolName, String address, String city) {
         School newSchool = new School(schoolName, address, city);
         schoolList.add(newSchool);
@@ -53,15 +55,15 @@ public class SchoolHelp implements Serializable {
     }
 
     public void createSchoolAdmin(String userName, String passWord, String fullName, String email, String phoneNumber,
-                                          String staffID, String position, String schoolID) {
+                                  String staffID, String position, String schoolID) {
         SchoolAdmin admin = new SchoolAdmin(userName, passWord, fullName, email, phoneNumber, staffID, position, schoolID);
         userList.add(admin);
     }
 
     //TODO remove return
     public TutorialRequest submitNewTutorialRequest(String requestStatus, String description,
-                                                     String schoolID, String proposedDate, String proposedTime,
-                                                     String studentLevel, int numStudents) {
+                                                    String schoolID, String proposedDate, String proposedTime,
+                                                    String studentLevel, int numStudents) {
         TutorialRequest req = new TutorialRequest(requestStatus, description, schoolID, proposedDate, proposedTime, studentLevel, numStudents);
         requestList.add(req);
         return req;
@@ -69,7 +71,7 @@ public class SchoolHelp implements Serializable {
 
     //TODO remove return
     public ResourceRequest submitNewResourceRequest(String requestStatus, String description,
-                                         String schoolID, String resourceType, int numOfRequired) {
+                                                    String schoolID, String resourceType, int numOfRequired) {
         ResourceRequest req = new ResourceRequest(requestStatus, description, schoolID, resourceType, numOfRequired);
         requestList.add(req);
 
@@ -78,8 +80,8 @@ public class SchoolHelp implements Serializable {
 
     //TODO remove return
     public Volunteer createNewVolunteer(String userName, String passWord, String fullName, String email,
-                                   String phoneNumber, String dateOfBirth, String occupation) {
-        Volunteer vol =  new Volunteer(userName, passWord, fullName, email, phoneNumber, dateOfBirth, occupation);
+                                        String phoneNumber, String dateOfBirth, String occupation) {
+        Volunteer vol = new Volunteer(userName, passWord, fullName, email, phoneNumber, dateOfBirth, occupation);
         userList.add(vol);
 
         return vol;
@@ -168,10 +170,6 @@ public class SchoolHelp implements Serializable {
                 .filter(user -> user.getPassword().equals(password))
                 .findFirst().orElse(null);
 
-        if (userData == null) {
-            return null;
-        }
-
         return userData;
     }
 
@@ -189,14 +187,44 @@ public class SchoolHelp implements Serializable {
         //now() method obtains the current date from the system clock in the default time zone
         LocalDate curDate = LocalDate.now();
         //calculates the amount of time between two dates and returns the years
-        if ((dob != null) && (curDate != null))
-        {
+        if (dob != null) {
             return Period.between(dob, curDate).getYears();
-        }
-        else
-        {
+        } else {
             return 0;
         }
+    }
+
+    public User changePassword(User user, String newPassword) {
+        user.setPassword(newPassword);
+        return user;
+    }
+
+    public SchoolAdmin updateProfile(SchoolAdmin admin, String fullname, String email,
+                                     String phone, String staffId, String position) {
+        admin.setFullName(fullname);
+        admin.setEmail(email);
+        admin.setPhoneNumber(phone);
+        admin.setStaffID(staffId);
+        admin.setPosition(position);
+
+        return admin;
+    }
+
+    public List<User> getAllUser() {
+        userList.sort(Comparator.comparing(User::getFullName));
+        return userList;
+    }
+
+    public List<Request> getAllRequest() {
+        requestList.sort(Comparator.comparing(Request::getRequestDate));
+        requestList.sort(Comparator.comparing(a -> getSchoolNameById(a.getSchoolID())));
+        return requestList;
+    }
+
+    public String getSchoolNameById(String schoolId) {
+        return Objects.requireNonNull(schoolList.stream()
+                .filter(school -> school.getSchoolID().equals(schoolId))
+                .findFirst().orElse(null)).getSchoolName();
     }
 
 }
